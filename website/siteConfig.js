@@ -106,6 +106,8 @@ const siteConfig = {
     cornerOffset: 100,
   },
 
+  customDocsPath: 'zio-web-docs/target/mdoc',
+
   shields: {
     github: {
       link: 'https://github.com/zio/zio-web',

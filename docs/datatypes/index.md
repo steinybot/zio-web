@@ -33,7 +33,7 @@ the bottom.
    - **[Response](http/response.md)** — TODO.
    - **[Middleware](http/middleware.md)** — TODO.
 
-## Modules
+## Protocol Modules
 
  - **[EndpointModule](modules/endpointmodule.md)** — TODO.
    - **[Annotations](modules/annotations.md)** — TODO.
