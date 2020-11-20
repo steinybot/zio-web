@@ -1,6 +1,6 @@
 import BuildHelper._
 import sbtbuildinfo.BuildInfoKey
-import sbtbuildinfo.BuildInfoKeys.{buildInfoKeys, buildInfoPackage}
+import sbtbuildinfo.BuildInfoKeys.{ buildInfoKeys, buildInfoPackage }
 
 inThisBuild(
   List(
