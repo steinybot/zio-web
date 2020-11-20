@@ -20,6 +20,29 @@ install_jdk: &install_jdk
   - run:
       name: Install JDK
       command: |
+
+install_yarn: &install_yarn
+  - run:
+      name: Install Yarn
+      command: |
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 78BD65473CB3BD13
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5DC22404A6F9F1CA
+        curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+        sudo bash -c 'echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list'
+        sudo apt update && sudo apt install yarn -y
+        yarn policies set-version
+        yarn -v
+
+install_nodejs: &install_nodejs
+  - run:
+      name: Install node.js
+      command: |
+        export NVM_DIR="/opt/circleci/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        nvm install
+        nvm use
+        node -v
+
         while $(ps aux | grep -i ' apt ' | grep -v grep > /dev/null); do sleep 1; done # Wait for apt to be ready
 
         sudo rm /etc/apt/sources.list.d/*
@@ -42,9 +65,13 @@ install_jdk: &install_jdk
         fi
         java -version
 
+filter_tags: &filter_tags
+  tags:
+    only: /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+
 load_cache: &load_cache
   - restore_cache:
-      key: sbt-http-cache
+      key: sbt-http-cache-v2
 
 clean_cache: &clean_cache
   - run:
@@ -56,12 +83,13 @@ clean_cache: &clean_cache
 
 save_cache: &save_cache
   - save_cache:
-      key: sbt-http-cache
+      key: sbt-http-cache-v2
       paths:
           - "~/.ivy2/cache"
           - "~/.sbt"
           - "~/.m2"
           - "~/.cache"
+          - "~/website/node_modules"
 
 lint: &lint
   steps:
@@ -103,6 +131,34 @@ release: &release
       - run:
           name: Release artifacts
           command: ./sbt ++${SCALA_VERSION}! clean sonatypeBundleClean +publishSigned sonatypeBundleRelease
+
+microsite: &microsite
+  steps:
+    - add_ssh_keys:
+        fingerprints:
+          - "b3:9b:af:d5:de:74:32:e7:7a:21:77:77:66:fe:2f:42"
+    - checkout
+    - <<: *load_cache
+    - <<: *install_nodejs
+    - <<: *install_yarn
+    - run:
+        name: Publishing website
+        command: |
+          git config --global user.email "${GH_NAME}@users.noreply.github.com"
+          git config --global user.name "${GH_NAME}"
+          export GIT_USER=${GH_NAME}
+          export TRAVIS_BUILD_NUMBER="${CIRCLE_BUILD_NUM}"
+          export TRAVIS_COMMIT="${CIRCLE_SHA1}"
+          sudo chown -R $USER:$USER /tmp
+          export NVM_DIR="/opt/circleci/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install
+          nvm use
+          node -v
+          ./sbt docs/docusaurusCreateSite
+          ./sbt docs/docusaurusPublishGhpages
+    - <<: *clean_cache
+    - <<: *save_cache
 
 jobs:
   lint:
@@ -147,39 +203,39 @@ jobs:
       - <<: *scala_212
       - <<: *jdk_8
 
+  microsite:
+    <<: *microsite
+    <<: *machine_ubuntu
+    environment:
+      - <<: *jdk_8
+
 workflows:
   version: 2
   build:
     jobs:
       - lint:
           filters:
-            tags:
-              only: /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+            <<: *filter_tags
       - test_212_jdk8:
           requires:
             - lint
           filters:
-            tags:
-              only: /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+            <<: *filter_tags
       - test_213_jdk8:
           requires:
             - lint
           filters:
-            tags:
-              only: /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+            <<: *filter_tags
       - test_212_jdk11:
           requires:
             - lint
           filters:
-            tags:
-              only: /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+            <<: *filter_tags
       - test_213_jdk11:
           requires:
             - lint
           filters:
-            tags:
-              only: /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
-
+            <<: *filter_tags
       - release:
           context: Sonatype
           requires:
@@ -188,7 +244,14 @@ workflows:
             - test_213_jdk8
             - test_213_jdk11
           filters:
+            <<: *filter_tags
             branches:
               ignore: /.*/
-            tags:
-              only: /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+      - microsite:
+          context: Website
+          requires:
+            - release
+          filters:
+            <<: *filter_tags
+            branches:
+              ignore: /.*/
