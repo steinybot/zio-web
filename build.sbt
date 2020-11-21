@@ -1,4 +1,3 @@
-import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import BuildHelper._
 
 inThisBuild(
@@ -55,7 +54,8 @@ lazy val core = project
   .settings(
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio"         % zioVersion,
-      "dev.zio" %% "zio-streams" % zioVersion,
-      "dev.zio" %% "zio-nio"     % zioNioVersion
+      "dev.zio" %% "zio-json"    % zioJsonVersion,
+      "dev.zio" %% "zio-nio"     % zioNioVersion,
+      "dev.zio" %% "zio-streams" % zioVersion
     )
   )

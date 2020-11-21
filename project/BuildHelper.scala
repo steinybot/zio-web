@@ -1,14 +1,12 @@
+import sbt.Keys._
 import sbt._
-import Keys._
-
-import explicitdeps.ExplicitDepsPlugin.autoImport._
-import sbtcrossproject.CrossPlugin.autoImport.CrossType
+import sbtbuildinfo.BuildInfoKeys._
 import sbtbuildinfo._
-import BuildInfoKeys._
 
 object BuildHelper {
 
   val zioVersion      = "1.0.3"
+  val zioJsonVersion  = "0.0.1"
   val zioNioVersion   = "1.0.0-RC9"
   val silencerVersion = "1.7.1"
 
