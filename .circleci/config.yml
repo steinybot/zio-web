@@ -20,6 +20,27 @@ install_jdk: &install_jdk
   - run:
       name: Install JDK
       command: |
+        while $(ps aux | grep -i ' apt ' | grep -v grep > /dev/null); do sleep 1; done # Wait for apt to be ready
+
+        sudo rm /etc/apt/sources.list.d/*
+        sudo tee /etc/apt/sources.list > /dev/null \<< 'EOF'
+        deb http://mirror.math.princeton.edu/pub/ubuntu/ xenial main universe
+        deb http://mirror.math.princeton.edu/pub/ubuntu/ xenial-updates main universe
+        deb http://mirror.math.princeton.edu/pub/ubuntu/ xenial-backports main universe
+        deb http://mirror.math.princeton.edu/pub/ubuntu/ xenial-security main restricted universe
+        EOF
+
+        if [ $JDK_VERSION == 11 ]; then
+          wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | sudo apt-key add -
+          sudo add-apt-repository https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ -y
+        fi
+        sudo apt update
+        if [ $JDK_VERSION == 11 ]; then
+          sudo apt install -y adoptopenjdk-11-hotspot
+        elif [ $JDK_VERSION == 8 ]; then
+          sudo apt install -y openjdk-8-jdk
+        fi
+        java -version
 
 install_yarn: &install_yarn
   - run:
@@ -42,28 +63,6 @@ install_nodejs: &install_nodejs
         nvm install
         nvm use
         node -v
-
-        while $(ps aux | grep -i ' apt ' | grep -v grep > /dev/null); do sleep 1; done # Wait for apt to be ready
-
-        sudo rm /etc/apt/sources.list.d/*
-        sudo tee /etc/apt/sources.list > /dev/null \<< 'EOF'
-        deb http://mirror.math.princeton.edu/pub/ubuntu/ xenial main universe
-        deb http://mirror.math.princeton.edu/pub/ubuntu/ xenial-updates main universe
-        deb http://mirror.math.princeton.edu/pub/ubuntu/ xenial-backports main universe
-        deb http://mirror.math.princeton.edu/pub/ubuntu/ xenial-security main restricted universe
-        EOF
-
-        if [ $JDK_VERSION == 11 ]; then
-          wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | sudo apt-key add -
-          sudo add-apt-repository https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ -y
-        fi
-        sudo apt update
-        if [ $JDK_VERSION == 11 ]; then
-          sudo apt install -y adoptopenjdk-11-hotspot
-        elif [ $JDK_VERSION == 8 ]; then
-          sudo apt install -y openjdk-8-jdk
-        fi
-        java -version
 
 filter_tags: &filter_tags
   tags:
