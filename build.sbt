@@ -49,6 +49,8 @@ lazy val root = project
     core
   )
 
+resolvers += Resolver.sonatypeRepo("snapshots")
+
 lazy val core = project
   .in(file("core"))
   .settings(stdSettings("zio-http-core"))
@@ -56,6 +58,7 @@ lazy val core = project
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio"         % zioVersion,
       "dev.zio" %% "zio-streams" % zioVersion,
-      "dev.zio" %% "zio-nio"     % zioNioVersion
+      "dev.zio" %% "zio-nio"     % zioNioVersion,
+      "dev.zio" %% "zio-json"    % zioJsonVersion
     )
   )

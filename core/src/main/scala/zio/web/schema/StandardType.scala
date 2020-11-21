@@ -1,5 +1,7 @@
 package zio.web.schema
 
+import java.time._
+
 sealed trait StandardType[A]
 
 object StandardType {
@@ -13,6 +15,21 @@ object StandardType {
   implicit object DoubleType extends StandardType[Double]
   implicit object ByteType   extends StandardType[Byte]
   implicit object CharType   extends StandardType[Char]
-
-  // TODO: Add java.time
+  //java.time specific types
+  implicit object DayOfWeekType      extends StandardType[DayOfWeek]
+  implicit object DurationType       extends StandardType[Duration]
+  implicit object InstantType        extends StandardType[Instant]
+  implicit object LocalDateType      extends StandardType[LocalDate]
+  implicit object LocalDateTimeType  extends StandardType[LocalDateTime]
+  implicit object LocalTimeType      extends StandardType[LocalTime]
+  implicit object MonthType          extends StandardType[Month]
+  implicit object MonthDayType       extends StandardType[MonthDay]
+  implicit object OffsetDateTimeType extends StandardType[OffsetDateTime]
+  implicit object OffsetTimeType     extends StandardType[OffsetTime]
+  implicit object PeriodType         extends StandardType[Period]
+  implicit object YearType           extends StandardType[Year]
+  implicit object YearMonthType      extends StandardType[YearMonth]
+  implicit object ZonedDateTimeType  extends StandardType[ZonedDateTime]
+  implicit object ZoneIdType         extends StandardType[ZoneId]
+  implicit object ZoneOffsetType     extends StandardType[ZoneOffset]
 }
