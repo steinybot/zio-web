@@ -100,6 +100,18 @@ lint: &lint
     - <<: *clean_cache
     - <<: *save_cache
 
+mdoc: &mdoc
+  steps:
+    - checkout
+    - <<: *load_cache
+    - run:
+        name: Generate documentation
+        command: |
+          ./sbt -Dfatal.warnings=true core/doc
+          ./sbt ++${SCALA_VERSION}! doc/mdoc
+    - <<: *clean_cache
+    - <<: *save_cache
+
 test: &test
   steps:
     - checkout
@@ -167,6 +179,13 @@ jobs:
       - <<: *scala_212
       - <<: *jdk_8
 
+  mdoc:
+    <<: *mdoc
+    <<: *machine_ubuntu
+    environment:
+      - <<: *scala_212
+      - <<: *jdk_8
+
   test_212_jdk8:
     <<: *test
     <<: *machine_ubuntu
@@ -215,6 +234,11 @@ workflows:
       - lint:
           filters:
             <<: *filter_tags
+      - mdoc:
+          requires:
+            - lint
+          filters:
+            <<: *filter_tags
       - test_212_jdk8:
           requires:
             - lint
@@ -242,6 +266,7 @@ workflows:
             - test_212_jdk11
             - test_213_jdk8
             - test_213_jdk11
+            - mdoc
           filters:
             <<: *filter_tags
             branches:
