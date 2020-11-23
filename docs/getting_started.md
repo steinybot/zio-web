@@ -27,7 +27,7 @@ import zio.ZIO
 import zio.web.codec.Codec
 import zio.web.http.HttpProtocolModule
 import zio.web.http.model.{ Method, Route }
-import zio.web.schema.Schema
+import zio.schema.Schema
 
 object GreetingModule extends HttpProtocolModule {
 
