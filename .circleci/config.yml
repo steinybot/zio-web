@@ -108,7 +108,7 @@ mdoc: &mdoc
         name: Generate documentation
         command: |
           ./sbt -Dfatal.warnings=true core/doc
-          ./sbt ++${SCALA_VERSION}! doc/mdoc
+          ./sbt ++${SCALA_VERSION}! docs/mdoc
     - <<: *clean_cache
     - <<: *save_cache
 
